@@ -12,7 +12,6 @@ const App = () => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [selectedRole, setSelectedRole] = useState('All');
 
-  // Function to group data by date and calculate averages
   const groupAndAggregateData = (data) => {
     return Object.values(
       data.reduce((acc, item) => {
@@ -44,19 +43,15 @@ const App = () => {
     })).sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
-  // Fetch data and initialize states
   useEffect(() => {
-    fetch('/data.json')
+    fetch('/ai-dashboard/data.json')
       .then((res) => res.json())
       .then((json) => {
-        console.log('Fetched Data:', json);
         setRawData(json);
 
-        // Extract unique roles
         const uniqueRoles = Array.from(new Set(json.map((item) => item['Grouped User Role'])));
         setRoles(['All', ...uniqueRoles]);
 
-        // Group data by date and calculate averages
         const grouped = groupAndAggregateData(json);
         setGroupedData(grouped);
         setFilteredData(grouped);
@@ -64,12 +59,10 @@ const App = () => {
       .catch((err) => console.error('Error fetching data:', err));
   }, []);
 
-  // Filter data based on date range and role
   const handleFilterChange = () => {
     let filtered = [...rawData];
 
-    // Apply date filter
-    if (dateRange[0] && dateRange[1]) {
+    if (dateRange && dateRange[0] && dateRange[1]) {
       filtered = filtered.filter(
         (item) =>
           dayjs(item["Date and Time"]).isAfter(dayjs(dateRange[0])) &&
@@ -77,12 +70,10 @@ const App = () => {
       );
     }
 
-    // Apply role filter
     if (selectedRole !== 'All') {
       filtered = filtered.filter((item) => item['Grouped User Role'] === selectedRole);
     }
 
-    // Group and aggregate filtered data
     const grouped = groupAndAggregateData(filtered);
     setFilteredData(grouped);
   };
@@ -93,9 +84,11 @@ const App = () => {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh', justifyContent: 'center' }}>
       <h1 style={{ textAlign: 'center' }}>AI Tool Performance Dashboard</h1>
 
-      {/* Filters */}
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-        <DatePicker.RangePicker onChange={(dates) => setDateRange(dates)} />
+        <DatePicker.RangePicker 
+          onChange={(dates) => setDateRange(dates)} 
+          allowClear={false} // Prevent clearing dates
+        />
         <Select
           style={{ width: '200px' }}
           onChange={(value) => setSelectedRole(value)}
@@ -109,7 +102,6 @@ const App = () => {
         </Select>
       </div>
 
-      {/* Dual-axis graph: Average satisfaction and edits over time */}
       <LineChart width={800} height={400} data={filteredData}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
